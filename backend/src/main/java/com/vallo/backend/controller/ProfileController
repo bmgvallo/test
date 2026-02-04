@@ -1,0 +1,25 @@
+package com.vallo.backend.controller;
+
+import com.vallo.backend.model.User;
+import com.vallo.backend.repository.UserRepository;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/profile")
+@CrossOrigin(origins = "http://localhost:5173")
+public class ProfileController {
+
+    private final UserRepository userRepository;
+
+    public ProfileController(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+    @GetMapping("/{email}")
+    public User getProfile(@PathVariable String email) {
+
+        return userRepository
+                .findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+    }
+}

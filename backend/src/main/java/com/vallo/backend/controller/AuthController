@@ -1,0 +1,40 @@
+package com.vallo.backend.controller;
+
+import com.vallo.backend.dto.AuthResponse;
+import com.vallo.backend.dto.LoginRequest;
+import com.vallo.backend.dto.RegisterRequest;
+import com.vallo.backend.model.User;
+import com.vallo.backend.security.JwtUtil;
+import com.vallo.backend.service.UserService;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/auth")
+@CrossOrigin(origins = "http://localhost:5173")
+public class AuthController {
+
+    private final UserService userService;
+    private final JwtUtil jwtUtil;
+
+    public AuthController(UserService userService, JwtUtil jwtUtil) {
+        this.userService = userService;
+        this.jwtUtil = jwtUtil;
+    }
+
+    // REGISTER
+    @PostMapping("/register")
+    public String register(@RequestBody RegisterRequest request) {
+        userService.register(request);
+        return "User registered successfully";
+    }
+
+    // LOGIN
+    @PostMapping("/login")
+    public AuthResponse login(@RequestBody LoginRequest request) {
+
+        User user = userService.login(request);
+        String token = jwtUtil.generateToken(user.getEmail());
+
+        return new AuthResponse(token);
+    }
+}
