@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Login.css';
 
 const Login = () => {
@@ -8,8 +9,11 @@ const Login = () => {
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const API_BASE_URL = 'http://localhost:8080/api';
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!email || !password) {
@@ -25,18 +29,45 @@ const Login = () => {
     setIsLoading(true);
     showMessage('Logging in...', 'info');
     
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const loginData = { email, password };
       
-      if (email === 'demo@example.com' && password === 'password') {
-        showMessage('Login successful! Welcome back.', 'success');
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(loginData),
+      });
 
-        setEmail('');
-        setPassword('');
-      } else {
-        showMessage('Invalid email or password', 'error');
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Invalid email or password');
+        }
+        throw new Error('Login failed');
       }
-    }, 1500);
+
+      const data = await response.json();
+      
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('userEmail', email);
+      
+      if (rememberMe) {
+        localStorage.setItem('rememberMe', 'true');
+      }
+      
+      showMessage('Login successful! Welcome back.', 'success');
+      
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 1500);
+      
+    } catch (error) {
+      showMessage(error.message, 'error');
+      console.error('Login error:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const validateEmail = (email) => {
@@ -113,7 +144,7 @@ const Login = () => {
           
           <div className="register-link">
             <p>
-              Don't have an account? <a href="#">Sign up</a>
+              Don't have an account? <a href="/registration">Sign up</a>
             </p>
           </div>
         </form>

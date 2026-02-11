@@ -1,0 +1,83 @@
+.register-container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: white;
+}
+
+.register-card {
+  background: #ffffff;
+  padding: 40px;
+  border-radius: 12px;
+  width: 400px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.register-card h1 {
+  text-align: center;
+  margin-bottom: 25px;
+  color: #111827;
+}
+
+.register-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.register-form input {
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+.register-form input:focus {
+  outline: none;
+  border-color: #2563eb;
+}
+
+.register-form button {
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 6px;
+  border: none;
+  background: #2563eb;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.register-form button:hover {
+  background: #1d4ed8;
+}
+
+.register-form button:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+.register-message {
+  margin-top: 15px;
+  padding: 10px;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.register-message.success {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.register-message.error {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.register-message.info {
+  background-color: #e0f2fe;
+  color: #075985;
+}
