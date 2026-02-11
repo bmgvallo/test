@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import './Dashboard.css';
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
@@ -10,24 +11,30 @@ const Dashboard = () => {
 
   useEffect(() => {
     const fetchProfile = async () => {
-      const email = localStorage.getItem('userEmail');
       const token = localStorage.getItem('token');
+      const userId = localStorage.getItem('userID');
+      const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
       
-      if (!email || !token) {
-        navigate('/');
+      if (!token || !userId || !isLoggedIn) {
+        handleLogout();
         return;
       }
 
       try {
-        const response = await fetch(`${API_BASE_URL}/profile/${email}`, {
+        const response = await fetch(`${API_BASE_URL}/profile/me/${userId}`, {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${token}`,
+            'Authorization': `Bearer ${token}`, // Add token!
             'Content-Type': 'application/json',
           },
         });
 
         if (!response.ok) {
+          if (response.status === 401) {
+            // Token invalid or expired
+            handleLogout();
+            return;
+          }
           throw new Error('Failed to fetch profile');
         }
 
@@ -35,65 +42,69 @@ const Dashboard = () => {
         setUser(userData);
       } catch (error) {
         console.error('Failed to fetch profile:', error);
-        navigate('/');
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          setUser(JSON.parse(storedUser));
+        }
       } finally {
         setLoading(false);
       }
     };
 
     fetchProfile();
-  }, [navigate]);
+  }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('userEmail');
-    localStorage.removeItem('rememberMe');
-    navigate('/');
-  };
+  const handleLogout = async () => {
+  try {
+    const token = localStorage.getItem('token');
+    
+    // Call backend logout endpoint
+    await fetch(`${API_BASE_URL}/auth/logout`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+  } catch (error) {
+    console.error('Logout error:', error);
+  } finally {
+    // Clear everything regardless of API response
+    localStorage.clear();
+    navigate('/', { replace: true });
+  }
+};
 
   if (loading) {
     return (
-      <div style={{ padding: '50px', textAlign: 'center' }}>
-        <h2>Loading...</h2>
+      <div className="dashboard-loading">
+        <div className="spinner"></div>
+        <h2>Loading your dashboard...</h2>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: '50px', maxWidth: '800px', margin: '0 auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+    <div className="dashboard-container">
+      <div className="dashboard-nav">
         <h1>Dashboard</h1>
-        <button 
-          onClick={handleLogout}
-          style={{
-            padding: '10px 20px',
-            backgroundColor: '#dc3545',
-            color: 'white',
-            border: 'none',
-            borderRadius: '5px',
-            cursor: 'pointer'
-          }}
-        >
-          Logout
-        </button>
-      </div>
-      
-      <div style={{ 
-        backgroundColor: '#f8f9fa', 
-        padding: '30px', 
-        borderRadius: '10px',
-        boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
-      }}>
-        <h2>Welcome, {user?.firstName} {user?.lastName}!</h2>
-        <div style={{ marginTop: '20px' }}>
-          <p><strong>Email:</strong> {user?.email}</p>
-          <p><strong>Username:</strong> {user?.username}</p>
-          <p><strong>Phone:</strong> {user?.phoneNumber}</p>
-          <p><strong>Account Created:</strong> {new Date(user?.createdAt).toLocaleDateString()}</p>
-          <p><strong>Last Login:</strong> {user?.lastLoginAt ? new Date(user?.lastLoginAt).toLocaleString() : 'First login'}</p>
+        <div className="nav-buttons">
+          <button onClick={() => navigate('/profile')} className="profile-btn">
+            View Profile
+          </button>
+          <button onClick={handleLogout} className="logout-btn">
+            Logout
+          </button>
         </div>
       </div>
-    </div>
+      
+      <div className="dashboard-content">
+        <div className="welcome-card">
+          <h2>Welcome back, {user?.firstName || user?.username}!</h2>
+          <p>View your profile!</p>
+        </div>
+        </div>
+      </div>
   );
 };
 

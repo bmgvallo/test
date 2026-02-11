@@ -17,7 +17,7 @@ export const authAPI = {
         throw new Error(error);
       }
 
-      return await response.text();
+      return await response.json(); // Returns the created user
     } catch (error) {
       throw error;
     }
@@ -35,22 +35,22 @@ export const authAPI = {
       });
 
       if (!response.ok) {
-        throw new Error('Invalid credentials');
+        const error = await response.text();
+        throw new Error(error || 'Invalid credentials');
       }
 
-      return await response.json();
+      return await response.json(); // Returns {user, userID, username, email, firstName, lastName}
     } catch (error) {
       throw error;
     }
   },
 
-  // Get user profile
-  async getProfile(email) {
+  // Get user profile by ID
+  async getProfileById(userId) {
     try {
-      const response = await fetch(`${API_BASE_URL}/profile/${email}`, {
+      const response = await fetch(`${API_BASE_URL}/profile/me/${userId}`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json',
         },
       });
@@ -64,4 +64,46 @@ export const authAPI = {
       throw error;
     }
   },
+
+  // Get user profile by email or username
+  async getProfile(identifier) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/profile/${identifier}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch profile');
+      }
+
+      return await response.json();
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Check if username exists
+  async checkUsername(username) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/check-username?username=${username}`);
+      const data = await response.json();
+      return data.exists;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Check if email exists
+  async checkEmail(email) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/check-email?email=${email}`);
+      const data = await response.json();
+      return data.exists;
+    } catch (error) {
+      throw error;
+    }
+  }
 };
